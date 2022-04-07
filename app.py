@@ -1,7 +1,5 @@
-from asyncore import dispatcher
 from turtle import update
 from flask import Flask
-from setuptools import Command
 from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import (Updater, 
     CommandHandler,

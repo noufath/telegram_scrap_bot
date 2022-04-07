@@ -1,11 +1,8 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG')
 
 
