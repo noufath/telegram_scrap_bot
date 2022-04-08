@@ -1,12 +1,10 @@
 import json
-from tools import clearCatID
-from db_connect import Db_Connect
+from scrap.tools import clearCatID
+from db_config.db_connect import Db_Connect
 from string import Template
 import re
-from collect_product_by_category import CollectProductByCategory
-import click
-import os
-import sys
+from scrap.collect_product_by_category import CollectProductByCategory
+from applogger import AppLogger
 
 
 class CollectProductItems():
@@ -14,6 +12,7 @@ class CollectProductItems():
     def __init__(self):
         self.db = Db_Connect(limit_retries=5, reconnect=True)
         self.cursor = self.db._cursor
+        
 
         self.GetItems()
 
@@ -30,9 +29,8 @@ class CollectProductItems():
             string_row = clearCatID(raw)
             CollectProductByCategory(string_row)
     
-    click.echo('Scrap complete..!')
-    sys.exit()
+    AppLogger.info_log("Finished collecting product item")
          
 
-if __name__ == '__main__':
-    CollectProductItems()
+# if __name__ == '__main__':
+#    CollectProductItems()

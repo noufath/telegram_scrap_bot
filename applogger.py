@@ -1,10 +1,14 @@
 import logging
 import logging.config
 from logging import Logger
+import os
 
 
 class AppLogger(Logger):
     def __init__(self):
+
+        self.dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.logfile = os.path.join(self.dir_path, 'whatshappend.log')
         self.LoggingConfig = {
             'version': 1,
             'disable_existing_loggers': False,
@@ -21,7 +25,7 @@ class AppLogger(Logger):
                 'rotating_file_handler': {
                     'class': 'logging.handlers.RotatingFileHandler',
                     'formatter': 'default_formatter',
-                    'filename': 'whatshappend.log',
+                    'filename': self.logfile,
                     'mode': 'a',
                     'maxBytes': 1024,
                     'backupCount': 5
@@ -57,22 +61,22 @@ class AppLogger(Logger):
         }
         logging.config.dictConfig(self.LoggingConfig)
 
-    def debug_log(self, log_message):
+    def debug_log(log_message):
         logger = logging.getLogger('debug_log')
         return logger.debug(log_message)
 
-    def info_log(self, log_message):
+    def info_log(log_message):
         logger = logging.getLogger('info_log')
         return logger.info(log_message)
 
-    def error_log(self, log_message):
+    def error_log(log_message):
         logger = logging.getLogger('error_log')
         return logger.error(log_message)
 
-    def warning_log(self, log_message):
+    def warning_log(log_message):
         logger = logging.getLogger('warning_log')
         return logger.warning(log_message)
     
-    def critical_log(self, log_message):
+    def critical_log(log_message):
         logger = logging.getLogger('critical_log')
         return logger.critical(log_message)

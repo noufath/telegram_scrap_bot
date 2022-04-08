@@ -1,7 +1,9 @@
 import os
 from typing import Union, get_type_hints
+from dotenv import load_dotenv
 
 
+load_dotenv()
 
 class AppConfigError(Exception):
     pass

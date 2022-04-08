@@ -1,22 +1,23 @@
+from multiprocessing.pool import ApplyResult
 from string import Template
 import requests
 from db_config.db_connect import Db_Connect
 import json
-from tools import TextSanitize
+from scrap.tools import TextSanitize
 from string import Template
-import logging
-import os
+from applogger import AppLogger
 import sys
-
+import urllib.request
 
 class CollectProductByCategory():
 
     def __init__(self, _catid):
         self._catid = _catid
+        
         self.url = ("https://shopee.co.id/api/v4/search/search_items?by=relevancy&limit=100"
             "&match_id={}&newest=0&order=desc&page_type=search&scenario=PAGE_OTHERS&version=2").format(self._catid)
-          
 
+       
         self.db = Db_Connect(limit_retries=5, reconnect=True)
         self.cursor  = self.db._cursor
         self.SaveToDatabase(data=self.CollectProductCategory())
@@ -27,8 +28,30 @@ class CollectProductByCategory():
         UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
             "Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.73")
 
-        header = {"User-Agent": UA}
-        test_request = requests.get(self.url)
+        header = {"User-Agent": UA,
+            'accept': '*/*',
+            'accept-charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+            'accept-encoding': 'gzip, deflate, br',
+            'connection': 'keep-alive',
+            'cookie':'REC_T_ID=d56a3a4a-b6e2-11ec-b4a8-2cea7f475ec8; SPC_F=gveUkgVZZA4du9aSsig5jgkI1wmqy3z5;'
+                '__LOCALE__null=ID; csrftoken=rbExzKmhGVhD2AOerAnzugHSONc7DCuZ; SPC_IA=-1; SPC_EC=-; SPC_U=-;'
+                '_QPWSDCXHZQA=2f7530e0-340d-491b-aaa8-7d43bcaa41f6; _gcl_au=1.1.712926693.1649385454;'
+                '_fbp=fb.2.1649385454503.1586246982; _gid=GA1.3.1800785616.1649385456; AMP_TOKEN=$NOT_FOUND;'
+                'SPC_SI=21E8YgAAAABmZWdHWHpIMvWE5gAAAAAAY2dvam4xT0k=; _dc_gtm_UA-61904553-8=1; '
+                'shopee_webUnique_ccd=9rHSqJO77U5myHoewmcGKQ==|+DK6OS8onrMyKq/mjjeK2eeJ+P1wlIYTenx7Fg+1Q23LgCpvEsRDvkqIzxSSS95q4w1QfKlxNEe0TcxP5GhFLw==|vfMq17xXzOui8K5q|04|3;'
+                '_ga_SW6D8G0HXK=GS1.1.1649399253.3.1.1649401698.28; _ga=GA1.3.642674812.1649385455;' 
+                'cto_bundle=DvqqsV9naHY0S01nUUpZdjFFa095dzZUOWVqVG1NV1ZweGlxUGNibzkySlZxZUpzeiUyQmJ5TnMzWHlBMUQlMkIxQjFCV0s4REhjOHJhM0VQd0NRUFZTa0doRWFqRFhGSzlTZDNIVDVzY29NViUyRmxEMW5YTkR1d1BRUTdZSzBkQ2ZPMjhZc1BiZw;'
+                'SPC_T_IV="VM+npPE3Dw4m7/Xxp6Mpfg=="; SPC_T_ID="fOFUVKcxkbTfmFW2GCrUpfqvFCDG2Tgd/UqeDnLMCAZL4gO18N8HK3ZteimHUf/Luyg4TqNotzL9C8t2naPRArSvHqRqh62Ov43vKXugM14=";'
+                'SPC_R_T_ID=fOFUVKcxkbTfmFW2GCrUpfqvFCDG2Tgd/UqeDnLMCAZL4gO18N8HK3ZteimHUf/Luyg4TqNotzL9C8t2naPRArSvHqRqh62Ov43vKXugM14=;'
+                'SPC_R_T_IV=VM+npPE3Dw4m7/Xxp6Mpfg==; SPC_T_ID=fOFUVKcxkbTfmFW2GCrUpfqvFCDG2Tgd/UqeDnLMCAZL4gO18N8HK3ZteimHUf/Luyg4TqNotzL9C8t2naPRArSvHqRqh62Ov43vKXugM14=;'
+                'SPC_T_IV=VM+npPE3Dw4m7/Xxp6Mpfg==',
+            'x-shopee-language': 'id',
+            'x-api-source': 'pc',
+            'sec-fetch-mode': 'cors',
+            'x-requested-with': 'XMLHttpRequest',
+            'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8,id;q=0.7,ms;q=0.6'
+        }
+        test_request = requests.get(self.url, headers=header)
         if test_request.status_code == 200:
             resp = requests.get(self.url, headers=header).content.decode("utf-8")
             _source = json.loads(resp)['items']
@@ -85,7 +108,8 @@ class CollectProductByCategory():
           
             return list_rec
         else:
-            click.echo('Error server respon {}'.format(test_request.status_code))
+            # click.echo('Error server respon {}'.format(test_request.status_code))
+            AppLogger.error_log('Error server respon {}'.format(test_request.status_code))
             sys.exit(0)
       
 
@@ -131,8 +155,10 @@ class CollectProductByCategory():
 
             
             self.db.execute(strSQL)
-            click.echo('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
+            # click.echo('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
+            AppLogger.info_log('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
 
         self.db.close()
-
+    
+    
 

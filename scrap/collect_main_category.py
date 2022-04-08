@@ -1,8 +1,7 @@
-from os import environ
-from sys import displayhook
 import requests
 from db_config.db_connect import Db_Connect
 from string import Template
+from applogger import AppLogger
 
 
 class CollectMainCategory():
@@ -49,6 +48,7 @@ class CollectMainCategory():
             self.db.execute(strSQL)
             
         self.db.close()
+        AppLogger.info_log("Finished Collecting main category data")
             
 #if __name__ == "__main__":
 #   CollectMainCategory("https://shopee.co.id/api/v2/category_list/get_all")

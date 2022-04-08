@@ -1,6 +1,6 @@
 import psycopg2
 import time
-from db_environ import Config
+from db_config.db_environ import Config
 from applogger import AppLogger
 
 
@@ -18,7 +18,7 @@ class Db_Connect():
         self._cursor = None
         self.reconnect = reconnect
         self.limit_retries = limit_retries
-               
+        self.ignite()     
 
     def connect(self, retry_counter=0):
         if not self._connection:
@@ -83,4 +83,3 @@ class Db_Connect():
         self.connect()
         self.pg_cursor()
 
-Iginite = Db_Connect.ignite()
