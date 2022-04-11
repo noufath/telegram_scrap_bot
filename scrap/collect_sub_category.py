@@ -2,7 +2,7 @@ import requests
 from db_config.db_connect import Db_Connect
 from string import Template
 import re
-from applogger import AppLogger
+import applogger
 
 class CollectSubCategory():
 
@@ -10,6 +10,7 @@ class CollectSubCategory():
         self.urlapi = urlapi
         self.db = Db_Connect(limit_retries=5, reconnect= True)
         self.cursor = self.db._cursor
+        
         self.SaveToDatabase(self.Collect_Sub_Category())
     
     def Collect_Sub_Category(self):
@@ -48,6 +49,8 @@ class CollectSubCategory():
         return s
 
     def SaveToDatabase(self, data):
+        logger = applogger.AppLoger('info_log')
+
         Template_SQL = ("INSERT INTO sub_category(display_name,name,catid,parent_category,is_adult,block_buyer_platform, sort_weight, sub_sub) "
                             "VALUES $list_recs "
                             "ON CONFLICT (catid) "
@@ -66,7 +69,7 @@ class CollectSubCategory():
             self.db.execute(strSQL)
         
         self.db.close()
-        AppLogger.info_log("Finished Collecting Sub Category data")
+        logger.info("Finished Collecting Sub Category data")
 
 #if __name__ == "__main__":
 #    CollectSubCategory("https://shopee.co.id/api/v2/category_list/get_all")

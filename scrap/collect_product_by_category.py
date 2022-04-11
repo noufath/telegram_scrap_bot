@@ -5,7 +5,7 @@ from db_config.db_connect import Db_Connect
 import json
 from scrap.tools import TextSanitize
 from string import Template
-from applogger import AppLogger
+import applogger
 import sys
 import urllib.request
 
@@ -17,7 +17,7 @@ class CollectProductByCategory():
         self.url = ("https://shopee.co.id/api/v4/search/search_items?by=relevancy&limit=100"
             "&match_id={}&newest=0&order=desc&page_type=search&scenario=PAGE_OTHERS&version=2").format(self._catid)
 
-       
+        
         self.db = Db_Connect(limit_retries=5, reconnect=True)
         self.cursor  = self.db._cursor
         self.SaveToDatabase(data=self.CollectProductCategory())
@@ -109,11 +109,14 @@ class CollectProductByCategory():
             return list_rec
         else:
             # click.echo('Error server respon {}'.format(test_request.status_code))
-            AppLogger.error_log('Error server respon {}'.format(test_request.status_code))
+            logger = applogger.AppLoger('error_log')
+            logger.error('Error server respon {}'.format(test_request.status_code))
             sys.exit(0)
       
 
     def SaveToDatabase(self, data):
+        logger = applogger.AppLoger('info_log')
+        
 
         fields = ["itemid", "shopid", "name", "label_ids", "image", "images", "currency", "stock", "status", "ctime", "sold", "historical_sold", 
                 "liked", "liked_count", "view_count", "catid", "brand", "cmt_count", "flag", "cb_option", "item_status", "price", "price_min",
@@ -156,9 +159,10 @@ class CollectProductByCategory():
             
             self.db.execute(strSQL)
             # click.echo('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
-            AppLogger.info_log('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
+            
+            logger.info('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
 
-        self.db.close()
+        # self.db.close()
     
     
 

@@ -1,7 +1,8 @@
+from multiprocessing.pool import ApplyResult
 import requests
 from db_config.db_connect import Db_Connect
 from string import Template
-from applogger import AppLogger
+import applogger
 
 
 class CollectMainCategory():
@@ -10,6 +11,8 @@ class CollectMainCategory():
         self.urlapi = urlapi
         self.db = Db_Connect(limit_retries=5, reconnect= True)
         self.cursor = self.db._cursor
+        
+       
         self.SaveToDatabase(self.Collect_Main_Category())
 
     def Collect_Main_Category(self):
@@ -48,7 +51,9 @@ class CollectMainCategory():
             self.db.execute(strSQL)
             
         self.db.close()
-        AppLogger.info_log("Finished Collecting main category data")
+        
+        logger = applogger.AppLoger('info_log')
+        logger.info("Finished Collecting main category data")
             
 #if __name__ == "__main__":
 #   CollectMainCategory("https://shopee.co.id/api/v2/category_list/get_all")

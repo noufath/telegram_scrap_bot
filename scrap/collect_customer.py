@@ -1,11 +1,12 @@
 import click
 from tools import clearCatID, json_field, toNumb, TextSanitize
-from db_connect import Db_Connect
+from db_config.db_connect import Db_Connect
 import requests
 import json
 import click
 import sys
 from string import Template
+import applogger
 
 
 class CollectCustomer():
@@ -18,6 +19,8 @@ class CollectCustomer():
         self.GetCustomer()
     
     def GetCustomer(self):
+        logger = applogger.AppLoger('info_log')
+
         strSQL = ("select distinct(shopid) shopid from item "
                 "order by shopid asc;")
             
@@ -29,13 +32,14 @@ class CollectCustomer():
             string_row = clearCatID(raw)
             
             self.CollectData(string_row)
-            click.echo('Saving customer id: {0}'.format(string_row))
-
+            # click.echo('Saving customer id: {0}'.format(string_row))
+            logger.info('Saving customer id: {0}'.format(string_row))
         
         self.db.close()
 
                 
     def CollectData(self, _shopid):
+        
         UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
             "Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.73")
         header = {"User-Agent": UA}
@@ -97,7 +101,9 @@ class CollectCustomer():
            
             
         else:
-            click.echo('Error server respon {}'.format(test_request.status_code))
+            logger = applogger.AppLoger('error_log')
+            # click.echo('Error server respon {}'.format(test_request.status_code))
+            logger.error('Error server respon {}'.format(test_request.status_code))
             sys.exit(0)
 
 if __name__ == '__main__':
