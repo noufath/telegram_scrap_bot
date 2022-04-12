@@ -7,12 +7,9 @@ import applogger
 
 class CollectMainCategory():
 
-    def __init__(self, urlapi):
+    def __init__(self, urlapi, db_connection):
         self.urlapi = urlapi
-        self.db = Db_Connect(limit_retries=5, reconnect= True)
-        self.cursor = self.db._cursor
-        
-       
+        self.db = db_connection
         self.SaveToDatabase(self.Collect_Main_Category())
 
     def Collect_Main_Category(self):
@@ -34,6 +31,7 @@ class CollectMainCategory():
         return list_values
 
     def SaveToDatabase(self, data):
+        logger = applogger.AppLoger('info_log')
         Template_SQL = ("INSERT INTO main_category(display_name,name,catid,parent_category,is_adult,block_buyer_platform, sort_weight) "
                             "VALUES $list_value "
                             "ON CONFLICT (catid) "
@@ -49,11 +47,6 @@ class CollectMainCategory():
             )
         
             self.db.execute(strSQL)
-            
-        self.db.close()
+            logger.info("Saving main category : {}".format(rec))
         
-        logger = applogger.AppLoger('info_log')
         logger.info("Finished Collecting main category data")
-            
-#if __name__ == "__main__":
-#   CollectMainCategory("https://shopee.co.id/api/v2/category_list/get_all")

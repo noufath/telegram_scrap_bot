@@ -9,8 +9,8 @@ import applogger
 
 class CollectProductItems():
 
-    def __init__(self):
-        self.db = Db_Connect(limit_retries=5, reconnect=True)
+    def __init__(self, db_connection):
+        self.db = db_connection
         self.cursor = self.db._cursor
        
 
@@ -29,10 +29,7 @@ class CollectProductItems():
     
         for raw in _result:
             string_row = clearCatID(raw)
-            CollectProductByCategory(string_row)
+            CollectProductByCategory(string_row, self.db)
     
         logger.info("Finished collecting product item")
         self.db.close()
-
-# if __name__ == '__main__':
-#    CollectProductItems()

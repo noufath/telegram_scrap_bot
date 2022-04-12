@@ -18,10 +18,10 @@ dictLogging = {
         'rotating_file_handler': {
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default_formatter',
-            'filename': 'whatshappend.log',
+            'filename': 'App.log',
             'mode': 'a',
             'maxBytes': 2*1024*1024,
-            'backupCount': 2
+            'backupCount': 4
         },
     },
     'loggers': {

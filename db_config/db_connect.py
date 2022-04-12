@@ -40,7 +40,7 @@ class Db_Connect():
                 else:
                     logger = applogger.AppLoger('error_log')
                     retry_counter += 1
-                    # print("Got Error {}. reconnecting {}".format(str(error).strip(), retry_counter))
+                    
                     logger.error("Got Error {}. reconnecting {}".format(str(error).strip(), retry_counter))
                     time.sleep(5)
                     
@@ -68,8 +68,6 @@ class Db_Connect():
 
         except:
             retry_counter += 1
-            # print("Got Error {}. reconnecting {}".format(str_query, retry_counter))
-            
             logger.error("Got Error {}. reconnecting {}".format(str_query, retry_counter))
             time.sleep(1)
             
@@ -82,9 +80,9 @@ class Db_Connect():
     def reset(self):
         logger = applogger.AppLoger('info_log')
         self.close()
-        self.connect()
-        # self.pg_cursor()
-        applogger.info("connection has been reset")
+        
+        self.ignite()
+        logger.info("Connection has been reset")
 
     def close(self):
         logger = applogger.AppLoger('info_log')
@@ -92,7 +90,6 @@ class Db_Connect():
             if self._cursor:
                 self._cursor.close()
             self._connection.close()
-            # print('Database connection is closed')
             
             logger.info('Database connection is closed')
         self._connection = None

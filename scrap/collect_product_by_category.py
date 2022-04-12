@@ -11,15 +11,15 @@ import urllib.request
 
 class CollectProductByCategory():
 
-    def __init__(self, _catid):
+    def __init__(self, _catid, db_connection):
         self._catid = _catid
         
         self.url = ("https://shopee.co.id/api/v4/search/search_items?by=relevancy&limit=100"
             "&match_id={}&newest=0&order=desc&page_type=search&scenario=PAGE_OTHERS&version=2").format(self._catid)
 
         
-        self.db = Db_Connect(limit_retries=5, reconnect=True)
-        self.cursor  = self.db._cursor
+        self.db = db_connection
+        
         self.SaveToDatabase(data=self.CollectProductCategory())
     
 
@@ -108,7 +108,7 @@ class CollectProductByCategory():
           
             return list_rec
         else:
-            # click.echo('Error server respon {}'.format(test_request.status_code))
+            
             logger = applogger.AppLoger('error_log')
             logger.error('Error server respon {}'.format(test_request.status_code))
             sys.exit(0)
@@ -158,11 +158,5 @@ class CollectProductByCategory():
 
             
             self.db.execute(strSQL)
-            # click.echo('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
             
             logger.info('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
-
-        # self.db.close()
-    
-    
-

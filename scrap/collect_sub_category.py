@@ -6,9 +6,9 @@ import applogger
 
 class CollectSubCategory():
 
-    def __init__(self, urlapi):
+    def __init__(self, urlapi, db_connection):
         self.urlapi = urlapi
-        self.db = Db_Connect(limit_retries=5, reconnect= True)
+        self.db = db_connection
         self.cursor = self.db._cursor
         
         self.SaveToDatabase(self.Collect_Sub_Category())
@@ -67,9 +67,6 @@ class CollectSubCategory():
             )
             
             self.db.execute(strSQL)
+            logger.info("Saving sub category : {}".format(rec))
         
-        self.db.close()
         logger.info("Finished Collecting Sub Category data")
-
-#if __name__ == "__main__":
-#    CollectSubCategory("https://shopee.co.id/api/v2/category_list/get_all")
