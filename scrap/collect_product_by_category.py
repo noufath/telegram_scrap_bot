@@ -1,5 +1,6 @@
 from multiprocessing.pool import ApplyResult
 from string import Template
+import psycopg2
 import requests
 from db_config.db_connect import Db_Connect
 import json
@@ -55,6 +56,7 @@ class CollectProductByCategory():
         if test_request.status_code == 200:
             resp = requests.get(self.url, headers=header).content.decode("utf-8")
             _source = json.loads(resp)['items']
+            
             list_rec = list()
        
            
@@ -116,7 +118,7 @@ class CollectProductByCategory():
 
     def SaveToDatabase(self, data):
         logger = applogger.AppLoger('info_log')
-        
+        cursor = self.db._cursor
 
         fields = ["itemid", "shopid", "name", "label_ids", "image", "images", "currency", "stock", "status", "ctime", "sold", "historical_sold", 
                 "liked", "liked_count", "view_count", "catid", "brand", "cmt_count", "flag", "cb_option", "item_status", "price", "price_min",
@@ -148,6 +150,9 @@ class CollectProductByCategory():
             " ON CONFLICT (itemid) DO UPDATE SET $fields_excluded;\n"
         )
 
+        # change to use mogrify for more speed saving
+
+        '''
         for rec in data:
 
             strSQL = Template(Template_SQL).substitute(
@@ -160,3 +165,24 @@ class CollectProductByCategory():
             self.db.execute(strSQL)
             
             logger.info('Saving data kode_produk: {0} - id_toko : {1} - nama_barang: {2}'.format(rec[0], rec[1], rec[2]))
+        '''
+
+        if data != []:
+            format_string = '(' + ','.join(['%s', ]*len(data[0])) + ')\n'
+            args_string = ','.join(cursor.mogrify(format_string, x).decode('utf-8') for x in data)
+
+            strSQL = Template(Template_SQL).substitute(
+                fields_raw=col, 
+                list_values=args_string,
+                fields_excluded=col_excluded
+            )
+
+            try:
+                self.db.execute(strSQL)
+            except (Exception, psycopg2.DatabaseError) as error:
+                logger.info("Error %s" % error)
+                self.db._connection.rollback()
+                cursor.close()
+                return 1
+            
+            logger.info("Finished Collecting product item in category: {}".format(self._catid))

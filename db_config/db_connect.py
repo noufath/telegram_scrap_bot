@@ -21,43 +21,44 @@ class Db_Connect():
         self.ignite()     
 
     def connect(self, retry_counter=0):
+        logger = applogger.AppLoger('info_log')
         
-        if not self._connection:
-            try:
-                self._connection = psycopg2.connect(**self.param_dict)
-                retry_counter = 0
-                self._connection.autocommit = False
+        try:
+            # connect to the PostgreSQL server
+            logger.info("Connecting to the PostgreSQL database ...")
+            self._connection = psycopg2.connect(**self.param_dict)
+            retry_counter = 0
+            self._connection.autocommit = False
+              
+            logger.info('Database Connected')
+        except psycopg2.OperationalError as error:
+            if not self.reconnect or retry_counter >= self.limit_retries:
                 logger = applogger.AppLoger('info_log')
-                logger.info('Database Connected')
-                return self._connection
+                logger.info("failed to connect to database. {} times failed to attempt connection".format(retry_counter))
+                raise error
+            else:
+                logger = applogger.AppLoger('error_log')
+                retry_counter += 1
+                    
+                logger.error("Got Error {}. reconnecting {}".format(str(error).strip(), retry_counter))
+                time.sleep(5)
+                    
+                self.connect(retry_counter)
+        except (Exception, psycopg2.Error) as error:
+            raise error
 
-            except psycopg2.OperationalError as error:
-                
-                if not self.reconnect or retry_counter >= self.limit_retries:
-                    logger = applogger.AppLoger('info_log')
-                    logger.info("failed to connect to database. {} times failed to attempt connection".format(retry_counter))
-                    raise error
-                else:
-                    logger = applogger.AppLoger('error_log')
-                    retry_counter += 1
-                    
-                    logger.error("Got Error {}. reconnecting {}".format(str(error).strip(), retry_counter))
-                    time.sleep(5)
-                    
-                    self.connect(retry_counter)
-            except (Exception, psycopg2.Error) as error:
-                    raise error
+        return self._connection
 
     def pg_cursor(self):
         logger = applogger.AppLoger('info_log')
-        if not self._cursor or self._cursor.closed:
-            if not self._connection:
-                self.connect()
-                logger.info("pg_cursor created")
-
+        if self._cursor == None or self._cursor.closed:
+            
             self._cursor = self._connection.cursor()
+            logger.info("pg_cursor created")
 
             return self._cursor
+        
+        logger.info("pg_cursor note created")
 
     def execute(self, str_query, retry_counter=0):
         logger = applogger.AppLoger('info_log')
