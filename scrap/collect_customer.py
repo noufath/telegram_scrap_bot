@@ -1,9 +1,6 @@
-import click
-from tools import clearCatID, json_field, toNumb, TextSanitize
-from db_config.db_connect import Db_Connect
+from .tools import clearCatID, json_field, TextSanitize, toNumb
 import requests
 import json
-import click
 import sys
 from string import Template
 import applogger
@@ -11,8 +8,8 @@ import applogger
 
 class CollectCustomer():
 
-    def __init__(self, url):
-        self.db = Db_Connect(limit_retries=5, reconnect=True)
+    def __init__(self, url, db_connection):
+        self.db = db_connection
         self.cursor = self.db._cursor
         self.url = url
         
@@ -105,6 +102,3 @@ class CollectCustomer():
             # click.echo('Error server respon {}'.format(test_request.status_code))
             logger.error('Error server respon {}'.format(test_request.status_code))
             sys.exit(0)
-
-if __name__ == '__main__':
-    CollectCustomer("https://shopee.co.id/api/v4/product/get_shop_info?shopid=")

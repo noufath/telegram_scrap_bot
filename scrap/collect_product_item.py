@@ -1,8 +1,4 @@
-import json
 from scrap.tools import clearCatID
-from db_config.db_connect import Db_Connect
-from string import Template
-import re
 from scrap.collect_product_by_category import CollectProductByCategory
 import applogger
 
