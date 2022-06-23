@@ -1,79 +1,74 @@
-from turtle import update
+import re
+import requests
 from flask import Flask
-from telegram import ReplyKeyboardRemove, Update
-from telegram.ext import (Updater, 
-    CommandHandler,
-    MessageHandler,
-    Filters,
-    ConversationHandler,
-    CallbackContext,
-)
-import logging
-from consts.settings import BOT_TOKEN
+import telegram
+import applogger
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+global TOKEN, bot, URL
+
+# get env 
+TOKEN = os.environ.get('BOT_TOKEN')
+URL = os.environ.get('URL')
+
+# Enable logging
+logger = applogger.AppLoger('info_log')
+
+bot = telegram.Bot(token=TOKEN)
 
 
 app = Flask(__name__)
 
-# Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+@app.route('/{}'.format(TOKEN), methods=['POST'])
+def respond():
+    update = telegram.Update.de_json(requests.get_json(force=True), bot)
 
-logger = logging.getLogger(__name__)
+    chat_id = update.message.chat.id
+    msg_id = update.message.message_id
 
-global TOKEN
+    # Telegram undestands UTF-8, so encode text for unicode compatibility
+    text = update.message.text.encode('utf-8').decode()
+    logger.info('Got text message : {}', format(text))
 
-def start(update: Update, context: CallbackContext) -> int:
-    """Start the conversation"""
-    user = update.message.from_user
-    update.message.reply_text(
-        'Hi!, I\'m scraper bot, I will give you insight about the products sold at shopee.co.id. \n\n'
-        'Send /cancel to stop talking to me.\n\n',
-    )
+    if text == "/start":
+        bot_welcome = """
+            Welcome to ShopSeller bot, the bot scrapt item sold from shopee.co.id
+            and then processing data for seller analytics.
+        """
+        bot.sendMessage(chat_id=chat_id, text=bot_welcome,  reply_to_message_id=msg_id)
+    else:
+        try:
+            # Clear the message we got from any non alphabets
+            text = re.sub(r"/W", "_", text)
+             # create the api link for the avatar based on http://avatars.adorable.io/
+            url = "https://api.adorable.io/avatars/285/{}.png".format(text.strip())
+            # reply with a photo to the name the user sent,
+            # note that you can send photos by url and telegram will fetch it for you
+            bot.sendPhoto(chat_id=chat_id, photo=url, reply_to_message_id=msg_id)
+        except Exception:
+           # if things went wrong
+           bot.sendMessage(chat_id=chat_id, text="There was a problem in the name you used, please enter different name", reply_to_message_id=msg_id)
 
-    return user
+    return 'ok'
 
-def cancel(update: Update, context: CallbackContext) -> int:
-    """Cancel and ends the conversation."""
-    user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
-    update.message.reply_text(
-        'Bye! I hope we can talk again some day', reply_markup=ReplyKeyboardRemove()
-    )
+@app.route('/setwebhook', methods=['GET', 'POST'])
+def set_webhook():
+    # we use the bot object to link the bot to our app which live
+    # in the link provided by URL
+    s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+    # something to let us know things work
+    if s:
+        return "webhook setup ok"
+    else:
+        return "webhook setup failed"
 
-    return ConversationHandler.END
-
-def main():
-    app = Flask(__name__)
-
-    
-    TOKEN = BOT_TOKEN
-
-    # Create the updater
-    updater = Updater(TOKEN)
-
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-    )
-    dispatcher.add_handler(conv_handler)
-
-    # start the Bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receive SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully
-    updater.idle()
-
+@app.route('/')
+def index():
+    return '.'
 
 if __name__ == '__main__':
-
-    main()
-    
+    app.run(threaded=True)
