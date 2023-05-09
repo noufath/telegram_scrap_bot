@@ -21,4 +21,4 @@ tornado==6.1
 tzdata==2022.1
 tzlocal==4.1
 urllib3==1.26.9
-Werkzeug==2.0.3
+Werkzeug>=2.2.3
